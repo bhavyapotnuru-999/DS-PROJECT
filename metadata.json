@@ -1,0 +1,8 @@
+{
+  "name": "MBU DS Lab Portal",
+  "description": "A simple and professional platform to manage, execute, document, and track Data Science laboratory experiments for Mohan Babu University.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

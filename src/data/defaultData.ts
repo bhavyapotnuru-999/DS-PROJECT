@@ -1,0 +1,368 @@
+import { UserProfile, Experiment, ExperimentTool } from '../types';
+
+export const DEFAULT_USER_ID = 'student_24102A030098';
+
+export const INITIAL_STUDENT_PROFILE: UserProfile = {
+  id: DEFAULT_USER_ID,
+  name: 'Bhavya Potnuru',
+  roll_no: '24102A030098',
+  section: '2',
+  branch: 'B.Tech – Data Science',
+  year: '3rd Year',
+  university: 'Mohan Babu University',
+  assistant_professor: 'Bosubabu Sir',
+  github: 'https://github.com/bhavyapotnuru-999',
+  linkedin: 'https://www.linkedin.com/in/bhavya-potnuru/',
+  email: 'potnurubhavya999@gmail.com',
+  skills: [
+    'Python',
+    'Java',
+    'Data Science',
+    'Data Analysis',
+    'SQL',
+    'HTML',
+    'CSS',
+    'JavaScript',
+    'NumPy',
+    'Pandas',
+    'Matplotlib',
+    'Scikit-learn',
+  ],
+  profile_photo: '',
+  updated_at: new Date().toISOString(),
+};
+
+export const INITIAL_EXPERIMENTS: Omit<Experiment, 'output_id'>[] = [
+  {
+    id: 'exp-1',
+    experiment_number: 1,
+    title: 'NumPy Array Manipulation and Vectorized Operations',
+    description: 'Creation of multidimensional arrays, indexing, slicing, broadcasting, and benchmarking vectorized mathematical operations against standard Python loops.',
+    aim: 'To understand multi-dimensional numerical array architecture, indexing principles, memory layout, and vectorized numerical performance using NumPy.',
+    status: 'Completed',
+    user_id: DEFAULT_USER_ID,
+    updated_at: new Date(Date.now() - 86400000 * 12).toISOString(),
+  },
+  {
+    id: 'exp-2',
+    experiment_number: 2,
+    title: 'Data Wrangling, Cleaning, and Aggregation using Pandas',
+    description: 'Loading heterogeneous tabular datasets (CSV/JSON), handling missing values (imputation/dropping), filtering, transformation, and group-by aggregations.',
+    aim: 'To execute comprehensive data preprocessing pipelines, inspect schema statistics, and compute multi-index aggregations with Pandas DataFrames.',
+    status: 'Completed',
+    user_id: DEFAULT_USER_ID,
+    updated_at: new Date(Date.now() - 86400000 * 10).toISOString(),
+  },
+  {
+    id: 'exp-3',
+    experiment_number: 3,
+    title: 'Exploratory Data Analysis & Statistical Visualizations with Matplotlib',
+    description: 'Generating statistical distribution charts: histograms, box plots, scatter matrices, heatmaps, and trend subplots for bivariate and multivariate analysis.',
+    aim: 'To visualize underlying distributions, detect outliers, uncover feature correlations, and generate publication-quality scientific charts.',
+    status: 'Completed',
+    user_id: DEFAULT_USER_ID,
+    updated_at: new Date(Date.now() - 86400000 * 8).toISOString(),
+  },
+  {
+    id: 'exp-4',
+    experiment_number: 4,
+    title: 'Feature Engineering, Encoding, and Normalization',
+    description: 'Applying categorical encoding (One-Hot, Ordinal), numerical scaling (StandardScaler, MinMaxScaler), handling skewed features, and detecting multicollinearity.',
+    aim: 'To transform raw observational data into normalized, mathematically valid feature spaces ready for machine learning algorithms.',
+    status: 'Completed',
+    user_id: DEFAULT_USER_ID,
+    updated_at: new Date(Date.now() - 86400000 * 6).toISOString(),
+  },
+  {
+    id: 'exp-5',
+    experiment_number: 5,
+    title: 'Supervised Learning: Linear and Polynomial Regression',
+    description: 'Implementing ordinary least squares (OLS) linear regression and polynomial curve fitting, measuring MSE, RMSE, MAE, and R-squared coefficient metrics.',
+    aim: 'To formulate continuous predictive regression models, fit regression hyperplanes, and evaluate residual distributions against test datasets.',
+    status: 'Completed',
+    user_id: DEFAULT_USER_ID,
+    updated_at: new Date(Date.now() - 86400000 * 4).toISOString(),
+  },
+  {
+    id: 'exp-6',
+    experiment_number: 6,
+    title: 'Classification using Logistic Regression and Decision Trees',
+    description: 'Binary and multi-class classification, constructing tree decision boundaries, hyperparameter tuning with max_depth and min_samples_split, and pruning.',
+    aim: 'To evaluate supervised discrete classification architectures, calculate log-loss, interpret decision boundaries, and extract feature importances.',
+    status: 'Completed',
+    user_id: DEFAULT_USER_ID,
+    updated_at: new Date(Date.now() - 86400000 * 2).toISOString(),
+  },
+  {
+    id: 'exp-7',
+    experiment_number: 7,
+    title: 'Model Evaluation: ROC-AUC, Confusion Matrix & K-Fold Cross-Validation',
+    description: 'Diagnostic assessment of classifier performance across varied threshold cutoffs using precision-recall curves, specificity, and stratified 5-fold cross-validation.',
+    aim: 'To prevent model overfitting, quantify sensitivity versus specificity tradeoffs, and measure generalized variance across folds.',
+    status: 'In Progress',
+    user_id: DEFAULT_USER_ID,
+    updated_at: new Date(Date.now() - 86400000 * 1).toISOString(),
+  },
+  {
+    id: 'exp-8',
+    experiment_number: 8,
+    title: 'Unsupervised Learning: K-Means Clustering & Elbow Method',
+    description: 'Clustering unlabelled multi-attribute records, calculating within-cluster sum of squares (WCSS), identifying optimal k via the elbow heuristic and silhouette scores.',
+    aim: 'To partition feature geometries into distinct centroid-based clusters and evaluate intra-cluster cohesion and inter-cluster separation.',
+    status: 'In Progress',
+    user_id: DEFAULT_USER_ID,
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'exp-9',
+    experiment_number: 9,
+    title: 'Dimensionality Reduction using Principal Component Analysis (PCA)',
+    description: 'Eigenvalue decomposition, covariance matrix formulation, projecting high-dimensional features onto top orthogonal principal components, and scree plot analysis.',
+    aim: 'To reduce feature dimensionality while capturing over 95% of total dataset variance, mitigating the curse of dimensionality.',
+    status: 'Not Started',
+    user_id: DEFAULT_USER_ID,
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'exp-10',
+    experiment_number: 10,
+    title: 'End-to-End ML Pipeline and Model Serialization',
+    description: 'Building composite Scikit-Learn Pipelines with ColumnTransformer, hyperparameter grid search, cross-validation, and serializing model artifacts with Joblib.',
+    aim: 'To construct robust production-grade data pipelines that encapsulate preprocessing, transformation, model inference, and artifact serialization.',
+    status: 'Not Started',
+    user_id: DEFAULT_USER_ID,
+    updated_at: new Date().toISOString(),
+  },
+];
+
+export const INITIAL_TOOLS: ExperimentTool[] = [
+  // Experiment 1
+  {
+    id: 'tool-1-1',
+    experiment_number: 1,
+    tool_name: 'Python',
+    category: 'Language',
+    purpose: 'Core programming language for scientific scripting, logic execution, and laboratory algorithms.',
+  },
+  {
+    id: 'tool-1-2',
+    experiment_number: 1,
+    tool_name: 'NumPy',
+    category: 'Library',
+    purpose: 'Fundamental package for N-dimensional arrays, linear algebra, Fourier transform, and vectorized operations.',
+  },
+  {
+    id: 'tool-1-3',
+    experiment_number: 1,
+    tool_name: 'Jupyter Notebook',
+    category: 'Environment',
+    purpose: 'Interactive computing environment for stepwise code execution, inline visualizations, and markdown documentation.',
+  },
+
+  // Experiment 2
+  {
+    id: 'tool-2-1',
+    experiment_number: 2,
+    tool_name: 'Python',
+    category: 'Language',
+    purpose: 'Core programming language for executing data transformation pipelines.',
+  },
+  {
+    id: 'tool-2-2',
+    experiment_number: 2,
+    tool_name: 'Pandas',
+    category: 'Library',
+    purpose: 'High-performance DataFrame data structures for loading tabular data, cleaning nulls, and performing group-by aggregations.',
+  },
+  {
+    id: 'tool-2-3',
+    experiment_number: 2,
+    tool_name: 'OpenPyXL / CSV',
+    category: 'Library',
+    purpose: 'Parsing spreadsheet datasets and structured text files into memory.',
+  },
+
+  // Experiment 3
+  {
+    id: 'tool-3-1',
+    experiment_number: 3,
+    tool_name: 'Python',
+    category: 'Language',
+    purpose: 'Scripting statistical summaries and chart rendering logic.',
+  },
+  {
+    id: 'tool-3-2',
+    experiment_number: 3,
+    tool_name: 'Matplotlib',
+    category: 'Library',
+    purpose: 'Comprehensive plotting library for publication-quality static, animated, and interactive visualizations.',
+  },
+  {
+    id: 'tool-3-3',
+    experiment_number: 3,
+    tool_name: 'Seaborn',
+    category: 'Library',
+    purpose: 'Statistical data visualization built on Matplotlib providing aesthetically styled themes, box plots, and correlation heatmaps.',
+  },
+
+  // Experiment 4
+  {
+    id: 'tool-4-1',
+    experiment_number: 4,
+    tool_name: 'Python',
+    category: 'Language',
+    purpose: 'Pipeline script orchestrating feature transformation routines.',
+  },
+  {
+    id: 'tool-4-2',
+    experiment_number: 4,
+    tool_name: 'Scikit-learn (sklearn.preprocessing)',
+    category: 'Library',
+    purpose: 'StandardScaler, MinMaxScaler, OneHotEncoder, and OrdinalEncoder for mathematical standardization.',
+  },
+  {
+    id: 'tool-4-3',
+    experiment_number: 4,
+    tool_name: 'Pandas',
+    category: 'Library',
+    purpose: 'Inspecting categorical distributions, frequency value counts, and managing engineered columns.',
+  },
+
+  // Experiment 5
+  {
+    id: 'tool-5-1',
+    experiment_number: 5,
+    tool_name: 'Python',
+    category: 'Language',
+    purpose: 'Scripting regression training routines and test batch evaluations.',
+  },
+  {
+    id: 'tool-5-2',
+    experiment_number: 5,
+    tool_name: 'Scikit-learn (LinearRegression)',
+    category: 'Framework',
+    purpose: 'Fitting ordinary least squares (OLS) linear hyperplanes and polynomial feature expansions.',
+  },
+  {
+    id: 'tool-5-3',
+    experiment_number: 5,
+    tool_name: 'Scikit-learn (sklearn.metrics)',
+    category: 'Library',
+    purpose: 'Computing Mean Squared Error (MSE), Root Mean Squared Error (RMSE), and R² determination score.',
+  },
+
+  // Experiment 6
+  {
+    id: 'tool-6-1',
+    experiment_number: 6,
+    tool_name: 'Python',
+    category: 'Language',
+    purpose: 'Supervised classification script development and training control flow.',
+  },
+  {
+    id: 'tool-6-2',
+    experiment_number: 6,
+    tool_name: 'Scikit-learn (LogisticRegression & DecisionTreeClassifier)',
+    category: 'Framework',
+    purpose: 'Training discrete binary/multi-class classification estimators and recursive binary splitting trees.',
+  },
+  {
+    id: 'tool-6-3',
+    experiment_number: 6,
+    tool_name: 'Graphviz',
+    category: 'Library',
+    purpose: 'Rendering graphical decision tree hierarchical flow diagrams and node split rules.',
+  },
+
+  // Experiment 7
+  {
+    id: 'tool-7-1',
+    experiment_number: 7,
+    tool_name: 'Python',
+    category: 'Language',
+    purpose: 'Evaluating model generalizability and cross-validation iteration scripts.',
+  },
+  {
+    id: 'tool-7-2',
+    experiment_number: 7,
+    tool_name: 'Scikit-learn (model_selection & metrics)',
+    category: 'Library',
+    purpose: 'KFold, StratifiedKFold cross-validation, confusion_matrix, classification_report, and roc_auc_score computation.',
+  },
+  {
+    id: 'tool-7-3',
+    experiment_number: 7,
+    tool_name: 'Matplotlib',
+    category: 'Library',
+    purpose: 'Plotting Receiver Operating Characteristic (ROC) curve and Precision-Recall trade-off graphs.',
+  },
+
+  // Experiment 8
+  {
+    id: 'tool-8-1',
+    experiment_number: 8,
+    tool_name: 'Python',
+    category: 'Language',
+    purpose: 'Unsupervised partitioning algorithm scripting and iteration loops.',
+  },
+  {
+    id: 'tool-8-2',
+    experiment_number: 8,
+    tool_name: 'Scikit-learn (KMeans)',
+    category: 'Framework',
+    purpose: 'Clustering unlabelled multi-dimensional feature spaces using Lloyd’s iterative heuristic algorithm.',
+  },
+  {
+    id: 'tool-8-3',
+    experiment_number: 8,
+    tool_name: 'Yellowbrick / Matplotlib',
+    category: 'Library',
+    purpose: 'Plotting the inertia elbow curve and silhouette coefficient visualizations to verify cluster tightness.',
+  },
+
+  // Experiment 9
+  {
+    id: 'tool-9-1',
+    experiment_number: 9,
+    tool_name: 'Python',
+    category: 'Language',
+    purpose: 'Linear algebra dimensionality reduction workflow.',
+  },
+  {
+    id: 'tool-9-2',
+    experiment_number: 9,
+    tool_name: 'Scikit-learn (PCA)',
+    category: 'Library',
+    purpose: 'Singular Value Decomposition (SVD) projection to compute orthogonal principal eigenvectors.',
+  },
+  {
+    id: 'tool-9-3',
+    experiment_number: 9,
+    tool_name: 'NumPy',
+    category: 'Library',
+    purpose: 'Calculating variance ratio distributions and cumulative explained variance scree plots.',
+  },
+
+  // Experiment 10
+  {
+    id: 'tool-10-1',
+    experiment_number: 10,
+    tool_name: 'Python',
+    category: 'Language',
+    purpose: 'Full stack laboratory pipeline integration and inference harness.',
+  },
+  {
+    id: 'tool-10-2',
+    experiment_number: 10,
+    tool_name: 'Scikit-learn (Pipeline & ColumnTransformer)',
+    category: 'Framework',
+    purpose: 'Assembling reproducible sequential machine learning workflows chaining imputers, scalers, and estimators.',
+  },
+  {
+    id: 'tool-10-3',
+    experiment_number: 10,
+    tool_name: 'Joblib',
+    category: 'Library',
+    purpose: 'Lightweight pipelined model disk serialization and deserialization for deployment packaging.',
+  },
+];
