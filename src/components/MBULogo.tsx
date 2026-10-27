@@ -12,7 +12,7 @@ export const MBULogo: React.FC<MBULogoProps> = ({
   showUploadOption = false,
 }) => {
   // Potential sources for the uploaded MBU logo
-  const [logoSrc, setLogoSrc] = useState<string>('/mbu-logo.svg');
+  const [logoSrc, setLogoSrc] = useState<string>('/mbu-logo.png');
   const [hasCustomLogo, setHasCustomLogo] = useState<boolean>(false);
 
   useEffect(() => {
@@ -61,9 +61,9 @@ export const MBULogo: React.FC<MBULogoProps> = ({
   };
 
   const sizeClasses = {
-    sm: 'h-8 w-8',
-    md: 'h-10 w-10 sm:h-11 sm:w-11',
-    lg: 'h-16 w-16',
+    sm: 'h-8 w-auto',
+    md: 'h-10 sm:h-11 w-auto',
+    lg: 'h-16 w-auto',
   };
 
   return (

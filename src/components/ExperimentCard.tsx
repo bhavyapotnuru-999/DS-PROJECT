@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Experiment, ExecutionOutput, ExperimentStatus } from '../types';
 import {
   FileText,
@@ -12,6 +12,11 @@ import {
   HardDrive,
   Calendar,
   Image as ImageIcon,
+  BookOpen,
+  ChevronDown,
+  ChevronUp,
+  Terminal,
+  Check,
 } from 'lucide-react';
 
 interface ExperimentCardProps {
@@ -21,6 +26,7 @@ interface ExperimentCardProps {
   onViewClick: (experiment: Experiment, output: ExecutionOutput) => void;
   onReplaceClick: (experiment: Experiment, output: ExecutionOutput) => void;
   onStatusChange: (experimentId: string, status: ExperimentStatus) => void;
+  onNavigateToModule?: (moduleId: string) => void;
 }
 
 export const ExperimentCard: React.FC<ExperimentCardProps> = ({
@@ -30,7 +36,10 @@ export const ExperimentCard: React.FC<ExperimentCardProps> = ({
   onViewClick,
   onReplaceClick,
   onStatusChange,
+  onNavigateToModule,
 }) => {
+  const [showGuidelines, setShowGuidelines] = useState(false);
+
   const isCompleted = experiment.status === 'Completed';
   const isInProgress = experiment.status === 'In Progress';
 
@@ -109,6 +118,67 @@ export const ExperimentCard: React.FC<ExperimentCardProps> = ({
         <p className="text-xs sm:text-sm text-slate-600 mt-1.5 leading-relaxed">
           {experiment.description}
         </p>
+
+        {/* Linked Module Quick Jump & Guidelines Toggle */}
+        <div className="mt-3 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+          {experiment.linked_module_id && onNavigateToModule ? (
+            <button
+              onClick={() => onNavigateToModule(experiment.linked_module_id!)}
+              className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 hover:text-blue-900 transition-colors"
+            >
+              <BookOpen className="w-3.5 h-3.5 text-blue-600" />
+              <span>Read Module {experiment.experiment_number} Textbook Notes</span>
+            </button>
+          ) : (
+            <div />
+          )}
+
+          <button
+            onClick={() => setShowGuidelines(!showGuidelines)}
+            className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-slate-800 font-medium"
+          >
+            <span>{showGuidelines ? 'Hide Instructions & Tests' : 'View Instructions & Test Cases'}</span>
+            {showGuidelines ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          </button>
+        </div>
+
+        {/* Collapsible Guidelines, Practical Steps & Test Cases */}
+        {showGuidelines && (
+          <div className="mt-3 p-3.5 bg-slate-50 rounded-xl border border-slate-200/90 text-xs space-y-3 animate-in fade-in">
+            {experiment.practical_steps && (
+              <div className="space-y-1">
+                <span className="font-bold text-slate-800 block">Lab Execution Steps:</span>
+                <ol className="list-decimal pl-4 space-y-1 text-slate-600">
+                  {experiment.practical_steps.map((step, idx) => (
+                    <li key={idx}>{step}</li>
+                  ))}
+                </ol>
+              </div>
+            )}
+
+            {experiment.test_cases && experiment.test_cases.length > 0 && (
+              <div className="space-y-1 pt-1 border-t border-slate-200/60">
+                <span className="font-bold text-slate-800 block">Sample Test Benchmarks:</span>
+                <div className="space-y-1.5 font-mono text-[11px]">
+                  {experiment.test_cases.map((tc, tcIdx) => (
+                    <div key={tcIdx} className="p-2 bg-white rounded border border-slate-200">
+                      <div className="text-blue-700 font-semibold">{tc.description}</div>
+                      <div className="text-slate-500">Input: {tc.input}</div>
+                      <div className="text-emerald-700">Expected: {tc.expected_output}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {experiment.expected_output_summary && (
+              <div className="pt-1 border-t border-slate-200/60 text-slate-600">
+                <strong className="text-slate-800">Expected Deliverable Output:</strong>{' '}
+                {experiment.expected_output_summary}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Output Section */}

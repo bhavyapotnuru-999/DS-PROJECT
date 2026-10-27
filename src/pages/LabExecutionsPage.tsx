@@ -10,6 +10,7 @@ interface LabExecutionsPageProps {
   outputs: ExecutionOutput[];
   onOutputSaved: (output: ExecutionOutput, message: string) => void;
   onStatusChange: (experimentId: string, status: ExperimentStatus) => void;
+  onNavigateToModule?: (moduleId: string) => void;
   userId: string;
 }
 
@@ -18,6 +19,7 @@ export const LabExecutionsPage: React.FC<LabExecutionsPageProps> = ({
   outputs,
   onOutputSaved,
   onStatusChange,
+  onNavigateToModule,
   userId,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -71,7 +73,7 @@ export const LabExecutionsPage: React.FC<LabExecutionsPageProps> = ({
               Lab Executions
             </h1>
             <p className="text-sm text-slate-600 mt-1">
-              Data Science Laboratory • Exactly 10 experiments with verified execution outputs and PDF reports
+              Data Science Digital Laboratory • Exactly 10 experiments with verified execution outputs, test cases, and linked modules
             </p>
           </div>
 
@@ -140,6 +142,7 @@ export const LabExecutionsPage: React.FC<LabExecutionsPageProps> = ({
               onViewClick={handleViewClick}
               onReplaceClick={handleReplaceClick}
               onStatusChange={onStatusChange}
+              onNavigateToModule={onNavigateToModule}
             />
           );
         })}

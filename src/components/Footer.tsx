@@ -25,7 +25,7 @@ export const Footer: React.FC = () => {
             <span>•</span>
             <span>Department of Data Science</span>
             <span>•</span>
-            <span>B.Tech Curriculum Lab Portal</span>
+            <span>B.Tech Data Science Digital Laboratory</span>
           </div>
         </div>
       </div>

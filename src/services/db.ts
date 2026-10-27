@@ -4,6 +4,12 @@ import {
   ExecutionOutput,
   ExperimentTool,
   ExperimentStatus,
+  TextbookModule,
+  ModuleNoteUpload,
+  LearningResource,
+  LabProject,
+  ProjectStatus,
+  ProjectDeliverable,
 } from '../types';
 import {
   DEFAULT_USER_ID,
@@ -11,21 +17,15 @@ import {
   INITIAL_EXPERIMENTS,
   INITIAL_TOOLS,
 } from '../data/defaultData';
+import { INITIAL_MODULES } from '../data/modulesData';
+import { INITIAL_RESOURCES } from '../data/resourcesData';
+import { INITIAL_PROJECTS } from '../data/projectsData';
 
 const DB_NAME = 'MBU_DS_Lab_Portal_DB';
-const DB_VERSION = 1;
-
-interface DBSchema {
-  profiles: UserProfile;
-  experiments: Experiment;
-  outputs: ExecutionOutput;
-  tools: ExperimentTool;
-}
+const DB_VERSION = 2; // Upgraded to v2 to support Modules, Resources, and Projects
 
 // Generate a valid minimal PDF Data URI for default experiments so preview works immediately
 export function createSamplePdfDataUri(title: string, experimentNum: number): string {
-  // A clean data URI for a formatted minimal PDF with university header
-  // Minimal valid PDF binary string
   const content = `%PDF-1.4
 1 0 obj
 << /Type /Catalog /Pages 2 0 R >>
@@ -79,6 +79,61 @@ startxref
   return 'data:application/pdf;base64,' + btoa(content);
 }
 
+// Generate valid minimal PDF Data URI for default modules
+export function createModulePdfDataUri(title: string, moduleNum: number): string {
+  const content = `%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length 320 >>
+stream
+BT
+/F1 18 Tf
+50 720 Td
+(MOHAN BABU UNIVERSITY - DS LAB PORTAL) Tj
+/F1 12 Tf
+0 -30 Td
+(Department of Data Science - Curriculum Modules) Tj
+0 -25 Td
+(Student: Bhavya Potnuru | Roll: 24102A030098) Tj
+0 -25 Td
+(Faculty In-charge: Bosubabu Sir) Tj
+0 -35 Td
+(Module ${moduleNum}: ${title.substring(0, 42)}) Tj
+0 -30 Td
+(Status: Official Lab Reference Curriculum Document) Tj
+0 -25 Td
+(Format: Standard Laboratory PDF Courseware) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000234 00000 n 
+0000000606 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+677
+%%EOF`;
+
+  return 'data:application/pdf;base64,' + btoa(content);
+}
+
 // Generate sample SVG/PNG plot output for image outputs
 export function createSamplePlotDataUri(title: string, expNum: number): string {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="100%" height="100%">
@@ -86,7 +141,7 @@ export function createSamplePlotDataUri(title: string, expNum: number): string {
     <rect x="20" y="20" width="760" height="460" rx="12" fill="#1e293b" stroke="#334155" stroke-width="2"/>
     
     <!-- Title and Student Header -->
-    <text x="40" y="60" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="20" font-weight="bold">Mohan Babu University — Data Science Laboratory</text>
+    <text x="40" y="60" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="20" font-weight="bold">Mohan Babu University — Data Science Digital Laboratory</text>
     <text x="40" y="90" fill="#38bdf8" font-family="system-ui, sans-serif" font-size="14">Experiment ${expNum}: ${title}</text>
     <text x="40" y="115" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="12">Student: Bhavya Potnuru (24102A030098) | Section 2 | Guide: Bosubabu Sir</text>
     
@@ -140,6 +195,7 @@ class PortalDatabase {
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
 
+        // Existing stores
         if (!db.objectStoreNames.contains('profiles')) {
           db.createObjectStore('profiles', { keyPath: 'id' });
         }
@@ -153,6 +209,25 @@ class PortalDatabase {
         }
         if (!db.objectStoreNames.contains('tools')) {
           db.createObjectStore('tools', { keyPath: 'id' });
+        }
+
+        // New stores for Modules, Resources, Projects, Notes
+        if (!db.objectStoreNames.contains('modules')) {
+          db.createObjectStore('modules', { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains('module_notes')) {
+          const noteStore = db.createObjectStore('module_notes', { keyPath: 'id' });
+          noteStore.createIndex('module_id', 'module_id', { unique: false });
+          noteStore.createIndex('user_id', 'user_id', { unique: false });
+        }
+        if (!db.objectStoreNames.contains('resources')) {
+          const resStore = db.createObjectStore('resources', { keyPath: 'id' });
+          resStore.createIndex('category', 'category', { unique: false });
+        }
+        if (!db.objectStoreNames.contains('projects')) {
+          const projStore = db.createObjectStore('projects', { keyPath: 'id' });
+          projStore.createIndex('category', 'category', { unique: false });
+          projStore.createIndex('status', 'status', { unique: false });
         }
       };
 
@@ -168,15 +243,20 @@ class PortalDatabase {
     try {
       const db = await this.openDB();
 
-      // Check profile
-      const tx = db.transaction(['profiles', 'experiments', 'outputs', 'tools'], 'readwrite');
+      const tx = db.transaction(
+        ['profiles', 'experiments', 'outputs', 'tools', 'modules', 'resources', 'projects'],
+        'readwrite'
+      );
       const profileStore = tx.objectStore('profiles');
       const expStore = tx.objectStore('experiments');
       const outStore = tx.objectStore('outputs');
       const toolStore = tx.objectStore('tools');
+      const modStore = tx.objectStore('modules');
+      const resStore = tx.objectStore('resources');
+      const projStore = tx.objectStore('projects');
 
+      // Check profile
       const existingProfileReq = profileStore.get(DEFAULT_USER_ID);
-
       await new Promise<void>((resolve, reject) => {
         existingProfileReq.onsuccess = () => {
           if (!existingProfileReq.result) {
@@ -215,12 +295,53 @@ class PortalDatabase {
         toolCountReq.onerror = () => reject(toolCountReq.error);
       });
 
+      // Check Modules
+      const modCountReq = modStore.count();
+      await new Promise<void>((resolve, reject) => {
+        modCountReq.onsuccess = () => {
+          if (modCountReq.result === 0) {
+            INITIAL_MODULES.forEach((mod) => {
+              modStore.put(mod);
+            });
+          }
+          resolve();
+        };
+        modCountReq.onerror = () => reject(modCountReq.error);
+      });
+
+      // Check Resources
+      const resCountReq = resStore.count();
+      await new Promise<void>((resolve, reject) => {
+        resCountReq.onsuccess = () => {
+          if (resCountReq.result === 0) {
+            INITIAL_RESOURCES.forEach((res) => {
+              resStore.put(res);
+            });
+          }
+          resolve();
+        };
+        resCountReq.onerror = () => reject(resCountReq.error);
+      });
+
+      // Check Projects
+      const projCountReq = projStore.count();
+      await new Promise<void>((resolve, reject) => {
+        projCountReq.onsuccess = () => {
+          if (projCountReq.result === 0) {
+            INITIAL_PROJECTS.forEach((proj) => {
+              projStore.put(proj);
+            });
+          }
+          resolve();
+        };
+        projCountReq.onerror = () => reject(projCountReq.error);
+      });
+
       // Seed starter outputs for completed experiments (Exp 1, 2, 3 as PDF, Exp 4, 5, 6 as Plot Images)
       const outCountReq = outStore.count();
       await new Promise<void>((resolve, reject) => {
         outCountReq.onsuccess = () => {
           if (outCountReq.result === 0) {
-            // Exp 1: PDF
             outStore.put({
               id: 'out-1',
               experiment_id: 'exp-1',
@@ -234,7 +355,6 @@ class PortalDatabase {
               notes: 'All NumPy multi-dimensional test cases and vectorized benchmarking passed.',
             });
 
-            // Exp 2: PDF
             outStore.put({
               id: 'out-2',
               experiment_id: 'exp-2',
@@ -248,7 +368,6 @@ class PortalDatabase {
               notes: 'Cleaned null values, grouped by departmental demographics, generated summary metrics.',
             });
 
-            // Exp 3: Image plot
             outStore.put({
               id: 'out-3',
               experiment_id: 'exp-3',
@@ -262,7 +381,6 @@ class PortalDatabase {
               notes: 'Visualized feature pair correlations and histogram densities.',
             });
 
-            // Exp 4: PDF
             outStore.put({
               id: 'out-4',
               experiment_id: 'exp-4',
@@ -276,7 +394,6 @@ class PortalDatabase {
               notes: 'StandardScaler verified with zero mean and unit variance.',
             });
 
-            // Exp 5: Image plot
             outStore.put({
               id: 'out-5',
               experiment_id: 'exp-5',
@@ -290,7 +407,6 @@ class PortalDatabase {
               notes: 'Polynomial degree 2 fitted with R² score of 0.941.',
             });
 
-            // Exp 6: PDF
             outStore.put({
               id: 'out-6',
               experiment_id: 'exp-6',
@@ -342,7 +458,6 @@ class PortalDatabase {
       const store = tx.objectStore('profiles');
       const req = store.put(updated);
       req.onsuccess = () => {
-        // Also cache in localStorage for fast synchronous bootstrap if needed
         try {
           localStorage.setItem('mbu_user_profile', JSON.stringify(updated));
         } catch (_) {}
@@ -362,7 +477,6 @@ class PortalDatabase {
       req.onsuccess = () => {
         const results = req.result as Experiment[];
         if (results && results.length > 0) {
-          // Sort by experiment_number 1 to 10
           resolve(results.sort((a, b) => a.experiment_number - b.experiment_number));
         } else {
           resolve(INITIAL_EXPERIMENTS as Experiment[]);
@@ -419,7 +533,6 @@ class PortalDatabase {
       const req = store.getAll();
       req.onsuccess = () => {
         const all = (req.result || []) as ExecutionOutput[];
-        // Filter by user if specified
         resolve(all.filter((o) => !userId || o.user_id === userId));
       };
       req.onerror = () => resolve([]);
@@ -442,7 +555,6 @@ class PortalDatabase {
       const outStore = tx.objectStore('outputs');
       const expStore = tx.objectStore('experiments');
 
-      // Check if there is already an output for this experiment, if so, replace/update it
       const allReq = outStore.getAll();
       allReq.onsuccess = () => {
         const all = (allReq.result || []) as ExecutionOutput[];
@@ -459,7 +571,6 @@ class PortalDatabase {
 
         const putReq = outStore.put(toSave);
         putReq.onsuccess = () => {
-          // Automatically mark the experiment as Completed
           const expReq = expStore.get(output.experiment_id);
           expReq.onsuccess = () => {
             if (expReq.result) {
@@ -527,15 +638,362 @@ class PortalDatabase {
     });
   }
 
+  // ==================== NEW MODULES METHODS ====================
+  async getModules(): Promise<TextbookModule[]> {
+    const db = await this.openDB();
+    return new Promise((resolve) => {
+      const tx = db.transaction('modules', 'readwrite');
+      const store = tx.objectStore('modules');
+      const req = store.getAll();
+      req.onsuccess = () => {
+        const all = (req.result || []) as TextbookModule[];
+        const mapByNum = new Map<number, TextbookModule>();
+        all.forEach((m) => {
+          if (m.module_number >= 1 && m.module_number <= 5) {
+            mapByNum.set(m.module_number, m);
+          } else {
+            store.delete(m.id);
+          }
+        });
+
+        const list: TextbookModule[] = [];
+        for (let num = 1; num <= 5; num++) {
+          let mod = mapByNum.get(num);
+          if (!mod) {
+            const initial = INITIAL_MODULES.find((m) => m.module_number === num) || {
+              id: `mod-${num}`,
+              module_number: num,
+              title: `Module ${num}`,
+              subtitle: 'Data Science Laboratory Curriculum',
+              author: 'Mohan Babu University',
+              edition: '2026',
+              cover_gradient: 'from-blue-900 via-indigo-950 to-slate-900',
+              cover_accent: '#38bdf8',
+              description: 'Laboratory curriculum notes and practical study materials.',
+              estimated_read_time: '45 mins',
+              chapters: [],
+            };
+            mod = { ...initial, id: `mod-${num}`, module_number: num };
+            store.put(mod);
+          }
+          if (mod.uploaded_file_name && !mod.uploaded_file_data) {
+            mod.uploaded_file_data = createModulePdfDataUri(mod.title, mod.module_number);
+            mod.uploaded_file_url = mod.uploaded_file_data;
+            store.put(mod);
+          }
+          list.push(mod);
+        }
+        resolve(list.sort((a, b) => a.module_number - b.module_number));
+      };
+      req.onerror = () => resolve(INITIAL_MODULES.slice(0, 5));
+    });
+  }
+
+  async saveModule(module: TextbookModule): Promise<TextbookModule> {
+    const db = await this.openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('modules', 'readwrite');
+      const store = tx.objectStore('modules');
+      const req = store.put(module);
+      req.onsuccess = () => resolve(module);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  async uploadModuleMaterial(
+    moduleIdOrNumber: string | number,
+    file: {
+      fileName: string;
+      fileType: string;
+      fileSize: number;
+      fileData?: string;
+    }
+  ): Promise<TextbookModule> {
+    const db = await this.openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('modules', 'readwrite');
+      const store = tx.objectStore('modules');
+      const allReq = store.getAll();
+
+      allReq.onsuccess = () => {
+        const all = (allReq.result || []) as TextbookModule[];
+        let target = all.find(
+          (m) =>
+            m.id === String(moduleIdOrNumber) ||
+            m.module_number === Number(moduleIdOrNumber)
+        );
+
+        if (!target) {
+          const modNum =
+            typeof moduleIdOrNumber === 'number'
+              ? moduleIdOrNumber
+              : parseInt(String(moduleIdOrNumber).replace(/\D/g, '')) || 1;
+          const defaultMod = INITIAL_MODULES.find((m) => m.module_number === modNum);
+          target = {
+            ...(defaultMod || {
+              id: `mod-${modNum}`,
+              module_number: modNum,
+              title: `Module ${modNum}`,
+              subtitle: 'Data Science Lab Module',
+              author: 'Mohan Babu University',
+              edition: '2026',
+              cover_gradient: 'from-blue-900 via-indigo-950 to-slate-900',
+              cover_accent: '#38bdf8',
+              description: 'Laboratory curriculum notes',
+              estimated_read_time: '45 mins',
+              chapters: [],
+            }),
+            id: `mod-${modNum}`,
+            module_number: modNum,
+          };
+        }
+
+        // Strictly update the PDF details on the target module without altering number or title
+        target.uploaded_file_name = file.fileName;
+        target.uploaded_file_type = file.fileType || 'application/pdf';
+        target.uploaded_file_size = file.fileSize;
+        target.uploaded_file_data = file.fileData || '';
+        target.uploaded_file_url = file.fileData || '';
+        target.uploaded_at = new Date().toISOString();
+
+        const putReq = store.put(target);
+        putReq.onsuccess = () => {
+          tx.oncomplete = () => {
+            resolve(target!);
+          };
+        };
+        putReq.onerror = () =>
+          reject(putReq.error || new Error('Failed to save PDF to module database'));
+      };
+
+      allReq.onerror = () => reject(allReq.error || new Error('Failed to access modules database'));
+      tx.onerror = () => reject(tx.error || new Error('Database transaction failed'));
+      tx.onabort = () => reject(tx.error || new Error('Database transaction aborted'));
+    });
+  }
+
+  async toggleModuleCompletion(moduleId: string, isCompleted: boolean): Promise<TextbookModule> {
+    const db = await this.openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('modules', 'readwrite');
+      const store = tx.objectStore('modules');
+      const getReq = store.get(moduleId);
+      getReq.onsuccess = () => {
+        if (getReq.result) {
+          const mod = getReq.result as TextbookModule;
+          mod.is_completed = isCompleted;
+          mod.progress_percent = isCompleted ? 100 : mod.progress_percent || 0;
+          store.put(mod);
+          resolve(mod);
+        } else {
+          reject(new Error('Module not found'));
+        }
+      };
+      getReq.onerror = () => reject(getReq.error);
+    });
+  }
+
+  async updateModuleProgress(moduleId: string, progress: number): Promise<void> {
+    const db = await this.openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('modules', 'readwrite');
+      const store = tx.objectStore('modules');
+      const getReq = store.get(moduleId);
+      getReq.onsuccess = () => {
+        if (getReq.result) {
+          const mod = getReq.result as TextbookModule;
+          mod.progress_percent = Math.min(100, Math.max(0, progress));
+          if (mod.progress_percent === 100) {
+            mod.is_completed = true;
+          }
+          store.put(mod);
+          resolve();
+        } else {
+          resolve();
+        }
+      };
+      getReq.onerror = () => reject(getReq.error);
+    });
+  }
+
+  async saveModuleNote(note: ModuleNoteUpload): Promise<ModuleNoteUpload> {
+    const db = await this.openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(['module_notes', 'modules'], 'readwrite');
+      const noteStore = tx.objectStore('module_notes');
+      const modStore = tx.objectStore('modules');
+
+      const req = noteStore.put(note);
+      req.onsuccess = () => {
+        // Also attach note reference to the module
+        const modReq = modStore.get(note.module_id);
+        modReq.onsuccess = () => {
+          if (modReq.result) {
+            const mod = modReq.result as TextbookModule;
+            mod.uploaded_notes = [...(mod.uploaded_notes || []), note];
+            modStore.put(mod);
+          }
+          resolve(note);
+        };
+        modReq.onerror = () => resolve(note);
+      };
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  async getModuleNotes(moduleId?: string): Promise<ModuleNoteUpload[]> {
+    const db = await this.openDB();
+    return new Promise((resolve) => {
+      const tx = db.transaction('module_notes', 'readonly');
+      const store = tx.objectStore('module_notes');
+      const req = store.getAll();
+      req.onsuccess = () => {
+        const notes = (req.result || []) as ModuleNoteUpload[];
+        if (moduleId) {
+          resolve(notes.filter((n) => n.module_id === moduleId));
+        } else {
+          resolve(notes);
+        }
+      };
+      req.onerror = () => resolve([]);
+    });
+  }
+
+  // ==================== NEW RESOURCES METHODS ====================
+  async getResources(): Promise<LearningResource[]> {
+    const db = await this.openDB();
+    return new Promise((resolve) => {
+      const tx = db.transaction('resources', 'readonly');
+      const store = tx.objectStore('resources');
+      const req = store.getAll();
+      req.onsuccess = () => {
+        const list = req.result as LearningResource[];
+        if (list && list.length > 0) {
+          resolve(list.sort((a, b) => new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime()));
+        } else {
+          resolve(INITIAL_RESOURCES);
+        }
+      };
+      req.onerror = () => resolve(INITIAL_RESOURCES);
+    });
+  }
+
+  async saveResource(resource: LearningResource): Promise<LearningResource> {
+    const db = await this.openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('resources', 'readwrite');
+      const store = tx.objectStore('resources');
+      const req = store.put(resource);
+      req.onsuccess = () => resolve(resource);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  async deleteResource(resourceId: string): Promise<void> {
+    const db = await this.openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('resources', 'readwrite');
+      const store = tx.objectStore('resources');
+      const req = store.delete(resourceId);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  // ==================== NEW PROJECTS METHODS ====================
+  async getProjects(): Promise<LabProject[]> {
+    const db = await this.openDB();
+    return new Promise((resolve) => {
+      const tx = db.transaction('projects', 'readwrite');
+      const store = tx.objectStore('projects');
+      const req = store.getAll();
+      req.onsuccess = () => {
+        const list = req.result as LabProject[];
+        const hasSkyCast = list && list.some((p) => p.title.toLowerCase().includes('skycast'));
+        if (list && list.length === 5 && hasSkyCast) {
+          resolve(list);
+        } else {
+          store.clear();
+          INITIAL_PROJECTS.forEach((proj) => store.put(proj));
+          resolve(INITIAL_PROJECTS);
+        }
+      };
+      req.onerror = () => resolve(INITIAL_PROJECTS);
+    });
+  }
+
+  async saveProject(project: LabProject): Promise<LabProject> {
+    const db = await this.openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('projects', 'readwrite');
+      const store = tx.objectStore('projects');
+      const updated = {
+        ...project,
+        updated_at: new Date().toISOString(),
+      };
+      const req = store.put(updated);
+      req.onsuccess = () => resolve(updated);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  async updateProjectStatus(projectId: string, status: ProjectStatus): Promise<LabProject> {
+    const db = await this.openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('projects', 'readwrite');
+      const store = tx.objectStore('projects');
+      const getReq = store.get(projectId);
+      getReq.onsuccess = () => {
+        if (getReq.result) {
+          const proj = getReq.result as LabProject;
+          proj.status = status;
+          proj.updated_at = new Date().toISOString();
+          store.put(proj);
+          resolve(proj);
+        } else {
+          reject(new Error('Project not found'));
+        }
+      };
+      getReq.onerror = () => reject(getReq.error);
+    });
+  }
+
+  async saveProjectDeliverable(deliverable: ProjectDeliverable): Promise<ProjectDeliverable> {
+    const db = await this.openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('projects', 'readwrite');
+      const store = tx.objectStore('projects');
+      const getReq = store.get(deliverable.project_id);
+      getReq.onsuccess = () => {
+        if (getReq.result) {
+          const proj = getReq.result as LabProject;
+          proj.deliverables = [...(proj.deliverables || []), deliverable];
+          proj.updated_at = new Date().toISOString();
+          store.put(proj);
+          resolve(deliverable);
+        } else {
+          reject(new Error('Project not found'));
+        }
+      };
+      getReq.onerror = () => reject(getReq.error);
+    });
+  }
+
   // Reset to initial state if needed
   async resetToDefaults(): Promise<void> {
     const db = await this.openDB();
     return new Promise((resolve, reject) => {
-      const tx = db.transaction(['profiles', 'experiments', 'outputs', 'tools'], 'readwrite');
+      const tx = db.transaction(
+        ['profiles', 'experiments', 'outputs', 'tools', 'modules', 'resources', 'projects'],
+        'readwrite'
+      );
       tx.objectStore('profiles').clear();
       tx.objectStore('experiments').clear();
       tx.objectStore('outputs').clear();
       tx.objectStore('tools').clear();
+      tx.objectStore('modules').clear();
+      tx.objectStore('resources').clear();
+      tx.objectStore('projects').clear();
 
       tx.oncomplete = async () => {
         localStorage.clear();

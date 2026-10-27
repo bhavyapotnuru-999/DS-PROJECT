@@ -29,6 +29,12 @@ export const INITIAL_STUDENT_PROFILE: UserProfile = {
     'Scikit-learn',
   ],
   profile_photo: '',
+  blood_group: 'O+',
+  valid_thru: '2024 - 2028',
+  phone: '+91 98765 43210',
+  emergency_contact: '+91 98765 00000',
+  hostel_room: 'Block B, Room 204',
+  dob: '2004-08-15',
   updated_at: new Date().toISOString(),
 };
 
@@ -42,6 +48,26 @@ export const INITIAL_EXPERIMENTS: Omit<Experiment, 'output_id'>[] = [
     status: 'Completed',
     user_id: DEFAULT_USER_ID,
     updated_at: new Date(Date.now() - 86400000 * 12).toISOString(),
+    linked_module_id: 'mod-1',
+    practical_steps: [
+      'Initialize 1D, 2D, and 3D ndarrays with explicit dtype configurations.',
+      'Inspect memory buffers, strides, and memory addresses of array views vs deep copies.',
+      'Demonstrate broadcasting rules by adding (M, 1) and (1, N) arrays.',
+      'Benchmark 10,000,000-element vectorized dot product against standard Python loops.',
+    ],
+    expected_output_summary: 'Array shapes (2, 3), stride steps (24, 8) bytes, verified broadcasting dimension (4, 2, 8), and benchmark showing >50x speedup in vectorized execution.',
+    test_cases: [
+      {
+        input: 'np.arange(12).reshape(3, 4)',
+        expected_output: 'Array with shape (3, 4), dtype int64, strides (32, 8)',
+        description: 'Verify contiguous row-major memory stride calculation.',
+      },
+      {
+        input: 'np.ones((4, 1)) + np.ones((1, 5))',
+        expected_output: 'Array with broadcasted shape (4, 5) filled with 2.0',
+        description: 'Verify two-way broadcasting compatibility.',
+      },
+    ],
   },
   {
     id: 'exp-2',
@@ -52,6 +78,26 @@ export const INITIAL_EXPERIMENTS: Omit<Experiment, 'output_id'>[] = [
     status: 'Completed',
     user_id: DEFAULT_USER_ID,
     updated_at: new Date(Date.now() - 86400000 * 10).toISOString(),
+    linked_module_id: 'mod-2',
+    practical_steps: [
+      'Load real estate or student census tabular CSV files with missing records.',
+      'Audit missing values using df.isna().sum() and calculate column null percentages.',
+      'Apply median imputation on skewed numerical features and categorical mode imputation.',
+      'Compute multi-index group-by statistical aggregates (mean, median, std dev).',
+    ],
+    expected_output_summary: 'Clean DataFrame with 0 null values, memory footprint reduced by 60%+ using categoricals, and multi-level group-by summary table.',
+    test_cases: [
+      {
+        input: 'df.isna().sum() on raw dataset',
+        expected_output: 'Verified detection of null values across numerical and categorical features.',
+        description: 'Null detection validation.',
+      },
+      {
+        input: 'df.groupby("Branch")["Score"].agg(["mean", "std"])',
+        expected_output: 'Correctly formatted statistical multi-index summary table.',
+        description: 'Multi-index aggregation verification.',
+      },
+    ],
   },
   {
     id: 'exp-3',
@@ -62,6 +108,21 @@ export const INITIAL_EXPERIMENTS: Omit<Experiment, 'output_id'>[] = [
     status: 'Completed',
     user_id: DEFAULT_USER_ID,
     updated_at: new Date(Date.now() - 86400000 * 8).toISOString(),
+    linked_module_id: 'mod-3',
+    practical_steps: [
+      'Set up publication-ready figure dimensions, typography, and color palette via Matplotlib OO API.',
+      'Render histograms with KDE curves to verify normal vs skewed distributions.',
+      'Generate Tukey box plots to identify data points beyond 1.5 * IQR.',
+      'Produce annotated Pearson correlation heatmaps with Seaborn.',
+    ],
+    expected_output_summary: 'Multi-panel high-DPI figure containing distribution histogram, box plots with outlier markers, and color-coded correlation matrix.',
+    test_cases: [
+      {
+        input: 'sns.boxplot(y="price", data=df)',
+        expected_output: 'Visual plot highlighting 1st quartile, median, 3rd quartile, and whiskers.',
+        description: 'Tukey outlier demarcation check.',
+      },
+    ],
   },
   {
     id: 'exp-4',
@@ -72,6 +133,21 @@ export const INITIAL_EXPERIMENTS: Omit<Experiment, 'output_id'>[] = [
     status: 'Completed',
     user_id: DEFAULT_USER_ID,
     updated_at: new Date(Date.now() - 86400000 * 6).toISOString(),
+    linked_module_id: 'mod-4',
+    practical_steps: [
+      'Split observations into train and test sets strictly before fitting any transformers.',
+      'Apply StandardScaler to continuous numerical features (μ=0, σ=1).',
+      'Encode nominal categorical features with OneHotEncoder(drop="first", handle_unknown="ignore").',
+      'Verify that test set is scaled strictly using parameters learned from the training set.',
+    ],
+    expected_output_summary: 'Standardized matrix with zero mean and unit variance on train set, with no data leakage into test sets.',
+    test_cases: [
+      {
+        input: 'X_train_scaled.mean(axis=0)',
+        expected_output: 'Vector of approximately [0.0, 0.0, 0.0]',
+        description: 'Zero mean convergence check.',
+      },
+    ],
   },
   {
     id: 'exp-5',
@@ -82,6 +158,21 @@ export const INITIAL_EXPERIMENTS: Omit<Experiment, 'output_id'>[] = [
     status: 'Completed',
     user_id: DEFAULT_USER_ID,
     updated_at: new Date(Date.now() - 86400000 * 4).toISOString(),
+    linked_module_id: 'mod-5',
+    practical_steps: [
+      'Fit OLS Linear Regression on train observations using scikit-learn.',
+      'Generate polynomial feature combinations using PolynomialFeatures(degree=2).',
+      'Calculate test set MSE, RMSE, MAE, and R² determination score.',
+      'Plot regression fit line alongside scatter data points and residual distribution.',
+    ],
+    expected_output_summary: 'Regression model achieving R² score > 0.90, validated residual plot with zero-centered normal distribution, and calculated slopes.',
+    test_cases: [
+      {
+        input: 'model.score(X_test, y_test)',
+        expected_output: 'R² score between 0.85 and 0.99 depending on degree.',
+        description: 'Model predictive coefficient of determination check.',
+      },
+    ],
   },
   {
     id: 'exp-6',
@@ -92,6 +183,21 @@ export const INITIAL_EXPERIMENTS: Omit<Experiment, 'output_id'>[] = [
     status: 'Completed',
     user_id: DEFAULT_USER_ID,
     updated_at: new Date(Date.now() - 86400000 * 2).toISOString(),
+    linked_module_id: 'mod-6',
+    practical_steps: [
+      'Fit LogisticRegression and DecisionTreeClassifier on train observations.',
+      'Compute Gini impurity and Information Gain reduction across tree splits.',
+      'Tune max_depth to prevent leaf node overfitting.',
+      'Render graphical decision tree text representation and export confusion matrix.',
+    ],
+    expected_output_summary: 'Decision tree with controlled depth, verified confusion matrix, and classification report with precision/recall > 90%.',
+    test_cases: [
+      {
+        input: 'clf.tree_.max_depth',
+        expected_output: 'Value <= configured max_depth constraint (e.g. 3 or 4).',
+        description: 'Pre-pruning hyperparameter verification.',
+      },
+    ],
   },
   {
     id: 'exp-7',
@@ -102,6 +208,21 @@ export const INITIAL_EXPERIMENTS: Omit<Experiment, 'output_id'>[] = [
     status: 'In Progress',
     user_id: DEFAULT_USER_ID,
     updated_at: new Date(Date.now() - 86400000 * 1).toISOString(),
+    linked_module_id: 'mod-7',
+    practical_steps: [
+      'Implement StratifiedKFold(n_splits=5) to preserve class balance across folds.',
+      'Compute prediction probabilities using model.predict_proba().',
+      'Plot Receiver Operating Characteristic (ROC) curve and calculate Area Under Curve (AUC).',
+      'Evaluate false positive rate vs false negative trade-offs across various thresholds.',
+    ],
+    expected_output_summary: 'Mean 5-fold cross-validation accuracy score with standard deviation, plotted ROC curve with AUC >= 0.90.',
+    test_cases: [
+      {
+        input: 'roc_auc_score(y_test, y_probs[:, 1])',
+        expected_output: 'Calculated score in range [0.85, 1.00].',
+        description: 'Threshold-invariant ranking diagnostic check.',
+      },
+    ],
   },
   {
     id: 'exp-8',
@@ -112,6 +233,21 @@ export const INITIAL_EXPERIMENTS: Omit<Experiment, 'output_id'>[] = [
     status: 'In Progress',
     user_id: DEFAULT_USER_ID,
     updated_at: new Date().toISOString(),
+    linked_module_id: 'mod-8',
+    practical_steps: [
+      'Scale features prior to clustering using StandardScaler.',
+      'Iterate k from 2 through 10, fitting KMeans(init="k-means++") at each step.',
+      'Plot WCSS inertia to identify the geometric elbow inflection point.',
+      'Compute silhouette scores to mathematically confirm optimal cluster separation.',
+    ],
+    expected_output_summary: 'Elbow plot indicating optimal k, silhouette score summary, and 2D scatter plot showing clustered observations with centroid markers.',
+    test_cases: [
+      {
+        input: 'silhouette_score(X_scaled, labels)',
+        expected_output: 'Score > 0.40 indicating cohesive and separated clusters.',
+        description: 'Cluster validity coefficient check.',
+      },
+    ],
   },
   {
     id: 'exp-9',
@@ -122,6 +258,21 @@ export const INITIAL_EXPERIMENTS: Omit<Experiment, 'output_id'>[] = [
     status: 'Not Started',
     user_id: DEFAULT_USER_ID,
     updated_at: new Date().toISOString(),
+    linked_module_id: 'mod-9',
+    practical_steps: [
+      'Standardize 10+ feature input matrix to zero mean and unit variance.',
+      'Fit PCA model and calculate eigenvalues via Singular Value Decomposition.',
+      'Inspect explained variance ratio of each principal component.',
+      'Plot cumulative scree curve and project high-dimensional data into top 2 principal dimensions.',
+    ],
+    expected_output_summary: 'Scree plot confirming top 3 components capture > 90% cumulative variance, and low-dimensional visualization preserving class separation.',
+    test_cases: [
+      {
+        input: 'np.sum(pca.explained_variance_ratio_)',
+        expected_output: 'Cumulative variance matching desired threshold (e.g. >= 0.90).',
+        description: 'Information retention verification.',
+      },
+    ],
   },
   {
     id: 'exp-10',
@@ -132,6 +283,21 @@ export const INITIAL_EXPERIMENTS: Omit<Experiment, 'output_id'>[] = [
     status: 'Not Started',
     user_id: DEFAULT_USER_ID,
     updated_at: new Date().toISOString(),
+    linked_module_id: 'mod-10',
+    practical_steps: [
+      'Construct ColumnTransformer with separate numerical and categorical preprocessing pipelines.',
+      'Combine preprocessing and final classifier inside a unified Pipeline object.',
+      'Fit entire pipeline on training data and evaluate end-to-end inference on holdout test set.',
+      'Serialize trained pipeline to disk with joblib.dump and verify deserialized reload inference.',
+    ],
+    expected_output_summary: 'Single reproducible pipeline artifact saved as model.joblib that ingests raw dictionary/DataFrame input and outputs validated predictions.',
+    test_cases: [
+      {
+        input: 'loaded_pipeline.predict(X_sample)',
+        expected_output: 'Identical predictions to original memory pipeline.',
+        description: 'Model serialization and deserialization integrity test.',
+      },
+    ],
   },
 ];
 
