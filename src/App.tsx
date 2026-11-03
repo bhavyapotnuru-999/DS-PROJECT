@@ -79,7 +79,10 @@ export default function App() {
           dbService.getProjects(),
         ]);
 
-        setProfile(loadedProfile);
+        setProfile({
+          ...loadedProfile,
+          profile_photo: INITIAL_STUDENT_PROFILE.profile_photo,
+        });
         setExperiments(loadedExperiments);
         setOutputs(loadedOutputs);
         setTools(loadedTools);
@@ -101,19 +104,6 @@ export default function App() {
   const handleProfileUpdated = (updated: UserProfile) => {
     setProfile(updated);
     addToast('success', 'Profile updated successfully.');
-  };
-
-  // Handle Student ID photo update from the digital badge
-  const handlePhotoUpdated = async (newPhotoUrl: string) => {
-    try {
-      const updated: UserProfile = { ...profile, profile_photo: newPhotoUrl };
-      await dbService.saveUserProfile(updated);
-      setProfile(updated);
-      addToast('success', newPhotoUrl ? 'Profile photo updated.' : 'Profile photo removed.');
-    } catch (err) {
-      console.error('Failed to update student photo:', err);
-      addToast('error', 'Failed to update profile photo.');
-    }
   };
 
   // Handle Output Upload/Replace
@@ -267,7 +257,6 @@ export default function App() {
             profile={profile}
             completedCount={completedCount}
             totalCount={totalCount}
-            onPhotoUpdated={handlePhotoUpdated}
           />
         )}
 

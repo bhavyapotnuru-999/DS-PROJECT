@@ -2,7 +2,6 @@ import React, { useState, useRef } from 'react';
 import { UserProfile } from '../types';
 import { MBULogo } from './MBULogo';
 import {
-  Camera,
   RotateCw,
   QrCode,
   ShieldCheck,
@@ -14,7 +13,6 @@ import {
   Download,
   CheckCircle2,
   Sparkles,
-  UploadCloud,
   User,
   Heart,
   Info,
@@ -22,76 +20,17 @@ import {
 
 interface StudentIDCardProps {
   profile: UserProfile;
-  onPhotoUpdated?: (newPhotoUrl: string) => void;
   /** Renders just the badge (no toolbar/hint) for the home page. */
   compact?: boolean;
 }
 
-// Preset professional student portraits for quick testing if user wants sample photo
-const SAMPLE_STUDENT_PORTRAITS = [
-  {
-    name: 'Academic Portrait 1',
-    url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&h=500&q=80',
-  },
-  {
-    name: 'Academic Portrait 2',
-    url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&h=500&q=80',
-  },
-  {
-    name: 'Academic Portrait 3',
-    url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&h=500&q=80',
-  },
-];
-
 export const StudentIDCard: React.FC<StudentIDCardProps> = ({
   profile,
-  onPhotoUpdated,
   compact = false,
 }) => {
   const [isFlipped, setIsFlipped] = useState(false);
-  const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
-
-  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      alert('Please select an image file (PNG, JPG, JPEG, WEBP).');
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      alert('Photo must be less than 5MB.');
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
-      if (onPhotoUpdated) {
-        onPhotoUpdated(dataUrl);
-      }
-      setShowPhotoModal(false);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleSelectPreset = (url: string) => {
-    if (onPhotoUpdated) {
-      onPhotoUpdated(url);
-    }
-    setShowPhotoModal(false);
-  };
-
-  const handleRemovePhoto = () => {
-    if (onPhotoUpdated) {
-      onPhotoUpdated('');
-    }
-    setShowPhotoModal(false);
-  };
 
   // Download ID card as image
   const handleDownloadCard = () => {
@@ -223,17 +162,6 @@ export const StudentIDCard: React.FC<StudentIDCardProps> = ({
             <span>{isFlipped ? 'View Front' : 'View Back'}</span>
           </button>
 
-          {/* Change Photo Button */}
-          <button
-            type="button"
-            onClick={() => setShowPhotoModal(true)}
-            className="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg shadow-2xs transition-colors"
-            title="Update photo on ID card"
-          >
-            <Camera className="w-3.5 h-3.5" />
-            <span>ID Photo</span>
-          </button>
-
           {/* Download ID Image Button */}
           <button
             type="button"
@@ -335,7 +263,7 @@ export const StudentIDCard: React.FC<StudentIDCardProps> = ({
                               : 'BP'}
                           </span>
                           <span className="text-[8px] font-mono tracking-widest text-amber-300 uppercase mt-1">
-                            Click to Add Photo
+                            MBU STUDENT
                           </span>
                         </div>
                       )}
@@ -345,20 +273,6 @@ export const StudentIDCard: React.FC<StudentIDCardProps> = ({
                         MBU
                       </div>
                     </div>
-
-                    {/* Change Photo Overlay Button */}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowPhotoModal(true);
-                      }}
-                      className="absolute inset-0 rounded-2xl bg-black/50 text-white flex flex-col items-center justify-center text-[11px] font-bold opacity-0 group-hover:opacity-100 transition-opacity gap-1"
-                      title="Update ID photo"
-                    >
-                      <Camera className="w-5 h-5" />
-                      <span>Change Photo</span>
-                    </button>
                   </div>
 
                   {/* Student Credentials Column */}
@@ -550,120 +464,7 @@ export const StudentIDCard: React.FC<StudentIDCardProps> = ({
       {/* Helpful Hint */}
       {!compact && (
         <div className="text-xs text-slate-500 text-center">
-          <span>Click the card to flip it, or click <strong>"ID Photo"</strong> to update your official photo.</span>
-        </div>
-      )}
-
-      {/* Hidden native input for photo upload */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handlePhotoSelect}
-        className="hidden"
-      />
-
-      {/* Photo Selection Modal */}
-      {showPhotoModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs animate-in fade-in"
-          role="dialog"
-          aria-modal="true"
-        >
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden">
-            <div className="p-5 bg-slate-900 text-white flex items-center justify-between">
-              <div>
-                <h3 className="font-bold text-base">Student ID Card Photo</h3>
-                <p className="text-xs text-slate-300">Upload your official photograph</p>
-              </div>
-              <button
-                onClick={() => setShowPhotoModal(false)}
-                className="text-slate-400 hover:text-white"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="p-6 space-y-5">
-              {/* Current photo preview */}
-              <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
-                <div className="w-16 h-20 rounded-xl overflow-hidden bg-slate-200 border border-slate-300 shrink-0 flex items-center justify-center text-slate-500 font-bold">
-                  {profile.profile_photo ? (
-                    <img
-                      src={profile.profile_photo}
-                      alt={profile.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span>No Photo</span>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-bold text-sm text-slate-900 truncate">{profile.name}</div>
-                  <div className="text-xs font-mono text-blue-700">{profile.roll_no}</div>
-                  <div className="text-xs text-slate-500 mt-1">
-                    Accepts PNG, JPG, or WEBP under 5MB.
-                  </div>
-                </div>
-              </div>
-
-              {/* Action 1: Upload from device */}
-              <div className="space-y-2">
-                <div className="text-xs font-bold text-slate-700 uppercase tracking-wide">
-                  Option 1: Upload From Computer / Phone
-                </div>
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-xl shadow-xs transition-colors flex items-center justify-center gap-2"
-                >
-                  <UploadCloud className="w-4 h-4" />
-                  <span>Choose Photo File...</span>
-                </button>
-              </div>
-
-              {/* Action 2: Quick Pick Sample Portraits */}
-              <div className="space-y-2">
-                <div className="text-xs font-bold text-slate-700 uppercase tracking-wide">
-                  Option 2: Test with Sample Portraits
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  {SAMPLE_STUDENT_PORTRAITS.map((p, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => handleSelectPreset(p.url)}
-                      className="p-1 border border-slate-200 hover:border-blue-500 rounded-xl transition-all group text-center"
-                    >
-                      <div className="w-full h-16 rounded-lg overflow-hidden bg-slate-100 mb-1">
-                        <img
-                          src={p.url}
-                          alt={p.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                        />
-                      </div>
-                      <span className="text-[10px] text-slate-600 font-medium block">
-                        Sample {idx + 1}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {profile.profile_photo && (
-                <div className="pt-2 border-t border-slate-100 flex justify-between items-center">
-                  <button
-                    type="button"
-                    onClick={handleRemovePhoto}
-                    className="text-xs text-red-600 hover:text-red-700 font-semibold"
-                  >
-                    Remove Current Photo
-                  </button>
-                  <span className="text-[11px] text-slate-400">Reverts to initials avatar</span>
-                </div>
-              )}
-            </div>
-          </div>
+          <span>Click the card to flip it and view the back.</span>
         </div>
       )}
     </div>

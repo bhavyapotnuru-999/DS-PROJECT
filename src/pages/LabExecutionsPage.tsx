@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Experiment, ExecutionOutput, ExperimentStatus } from '../types';
 import { ExperimentCard } from '../components/ExperimentCard';
-import { FileUploadModal } from '../components/FileUploadModal';
 import { PDFViewerModal } from '../components/PDFViewerModal';
+import { createLabManualOutput } from '../data/experimentCode';
 import { Search, Filter, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 
 interface LabExecutionsPageProps {
@@ -26,9 +26,6 @@ export const LabExecutionsPage: React.FC<LabExecutionsPageProps> = ({
   const [filterStatus, setFilterStatus] = useState<'All' | ExperimentStatus>('All');
 
   // Modals state
-  const [uploadModalOpen, setUploadModalOpen] = useState(false);
-  const [activeExpForUpload, setActiveExpForUpload] = useState<Experiment | null>(null);
-
   const [viewerModalOpen, setViewerModalOpen] = useState(false);
   const [activeOutputForViewer, setActiveOutputForViewer] = useState<ExecutionOutput | null>(null);
   const [activeExpForViewer, setActiveExpForViewer] = useState<Experiment | null>(null);
@@ -37,20 +34,10 @@ export const LabExecutionsPage: React.FC<LabExecutionsPageProps> = ({
   const inProgressCount = experiments.filter((e) => e.status === 'In Progress').length;
   const notStartedCount = experiments.filter((e) => e.status === 'Not Started').length;
 
-  const handleUploadClick = (exp: Experiment) => {
-    setActiveExpForUpload(exp);
-    setUploadModalOpen(true);
-  };
-
   const handleViewClick = (exp: Experiment, output: ExecutionOutput) => {
     setActiveExpForViewer(exp);
     setActiveOutputForViewer(output);
     setViewerModalOpen(true);
-  };
-
-  const handleReplaceClick = (exp: Experiment, _output: ExecutionOutput) => {
-    setActiveExpForUpload(exp);
-    setUploadModalOpen(true);
   };
 
   const filteredExperiments = experiments.filter((exp) => {
@@ -132,15 +119,16 @@ export const LabExecutionsPage: React.FC<LabExecutionsPageProps> = ({
       {/* Experiments Grid (10 Experiments) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {filteredExperiments.map((exp) => {
-          const output = outputs.find((o) => o.experiment_id === exp.id) || null;
+          const savedOutput = outputs.find((o) => o.experiment_id === exp.id) || null;
+          // Fall back to the bundled lab manual PDF so the card always shows
+          // the document that is available for the experiment.
+          const output = savedOutput ?? createLabManualOutput(exp.experiment_number, exp.id, userId);
           return (
             <ExperimentCard
               key={exp.id}
               experiment={exp}
               output={output}
-              onUploadClick={handleUploadClick}
               onViewClick={handleViewClick}
-              onReplaceClick={handleReplaceClick}
               onStatusChange={onStatusChange}
               onNavigateToModule={onNavigateToModule}
             />
@@ -166,18 +154,6 @@ export const LabExecutionsPage: React.FC<LabExecutionsPageProps> = ({
         </div>
       )}
 
-      {/* Upload/Replace Modal */}
-      {uploadModalOpen && activeExpForUpload && (
-        <FileUploadModal
-          experiment={activeExpForUpload}
-          existingOutput={outputs.find((o) => o.experiment_id === activeExpForUpload.id) || null}
-          isOpen={uploadModalOpen}
-          onClose={() => setUploadModalOpen(false)}
-          onSuccess={onOutputSaved}
-          userId={userId}
-        />
-      )}
-
       {/* PDF and Image Preview Modal */}
       {viewerModalOpen && activeExpForViewer && activeOutputForViewer && (
         <PDFViewerModal
@@ -186,12 +162,6 @@ export const LabExecutionsPage: React.FC<LabExecutionsPageProps> = ({
           experimentNumber={activeExpForViewer.experiment_number}
           isOpen={viewerModalOpen}
           onClose={() => setViewerModalOpen(false)}
-          onReplaceRequested={(expId) => {
-            const exp = experiments.find((e) => e.id === expId);
-            if (exp) {
-              handleReplaceClick(exp, activeOutputForViewer);
-            }
-          }}
         />
       )}
     </div>

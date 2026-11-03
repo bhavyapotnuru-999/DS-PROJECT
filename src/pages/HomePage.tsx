@@ -20,7 +20,6 @@ interface HomePageProps {
   profile: UserProfile;
   completedCount: number;
   totalCount: number;
-  onPhotoUpdated?: (newPhotoUrl: string) => void;
 }
 
 export const HomePage: React.FC<HomePageProps> = ({
@@ -28,7 +27,6 @@ export const HomePage: React.FC<HomePageProps> = ({
   profile,
   completedCount,
   totalCount,
-  onPhotoUpdated,
 }) => {
   const percentage = Math.round((completedCount / totalCount) * 100);
 
@@ -80,7 +78,7 @@ export const HomePage: React.FC<HomePageProps> = ({
 
           {/* Student Digital ID Badge */}
           <div className="flex justify-center lg:justify-end">
-            <StudentIDCard profile={profile} onPhotoUpdated={onPhotoUpdated} compact />
+            <StudentIDCard profile={profile} compact />
           </div>
         </div>
       </div>

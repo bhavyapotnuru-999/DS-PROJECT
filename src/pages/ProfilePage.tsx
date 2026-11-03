@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { UserProfile, Experiment } from '../types';
 import { dbService } from '../services/db';
 import {
@@ -11,11 +11,9 @@ import {
   School,
   ExternalLink,
   FlaskConical,
-  Camera,
   Check,
   X,
   Plus,
-  UploadCloud,
 } from 'lucide-react';
 
 interface ProfilePageProps {
@@ -38,7 +36,6 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   const [newSkillInput, setNewSkillInput] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [inlineError, setInlineError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Sync formData when profile changes
   useEffect(() => {
@@ -50,43 +47,6 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   const notStartedCount = experiments.filter((e) => e.status === 'Not Started').length;
   const totalCount = experiments.length || 10;
   const progressPercentage = Math.round((completedCount / totalCount) * 100);
-
-  // Directly handle photo updates from ID card or file input
-  const handlePhotoUpdated = async (newPhotoUrl: string) => {
-    try {
-      const updated: UserProfile = {
-        ...profile,
-        profile_photo: newPhotoUrl,
-      };
-      await dbService.saveUserProfile(updated);
-      onProfileUpdated(updated);
-    } catch (err) {
-      console.error('Failed to update student photo:', err);
-    }
-  };
-
-  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      setInlineError('Please select a valid image file (PNG, JPG, WEBP).');
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      setInlineError('Profile photo must be less than 5MB.');
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
-      setFormData((prev) => ({ ...prev, profile_photo: dataUrl }));
-      setInlineError(null);
-    };
-    reader.readAsDataURL(file);
-  };
 
   const handleAddSkill = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -281,7 +241,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
               ) : (
                 /* ================= INLINE EDITING MODE ================= */
                 <form onSubmit={handleSaveInline} className="space-y-6 pt-4">
-                  {/* Photo Edit & Preview */}
+                  {/* Photo Preview */}
                   <div className="flex flex-col sm:flex-row items-center gap-6 -mt-16 sm:-mt-20 p-4 bg-slate-50 rounded-2xl border border-slate-200">
                     <div className="relative shrink-0">
                       <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl border-4 border-white shadow-xl overflow-hidden bg-slate-900 flex items-center justify-center text-white text-2xl font-bold">
@@ -299,48 +259,14 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                           </span>
                         )}
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="absolute bottom-1 right-1 p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-md transition-colors"
-                        title="Upload photo"
-                      >
-                        <Camera className="w-4 h-4" />
-                      </button>
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        onChange={handlePhotoSelect}
-                        className="hidden"
-                      />
                     </div>
 
-                    <div className="space-y-2 text-center sm:text-left flex-1">
+                    <div className="space-y-1 text-center sm:text-left flex-1">
                       <div className="text-sm font-bold text-slate-900">
                         Student Profile Photo
                       </div>
                       <div className="text-xs text-slate-500">
-                        Upload your personal portrait image (PNG, JPG, or WEBP under 5MB).
-                      </div>
-                      <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start">
-                        <button
-                          type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-2xs"
-                        >
-                          <UploadCloud className="w-3.5 h-3.5" />
-                          <span>Choose Photo File</span>
-                        </button>
-                        {formData.profile_photo && (
-                          <button
-                            type="button"
-                            onClick={() => setFormData((prev) => ({ ...prev, profile_photo: '' }))}
-                            className="px-3 py-1.5 text-xs text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg font-medium"
-                          >
-                            Remove Photo
-                          </button>
-                        )}
+                        Official profile photo on record.
                       </div>
                     </div>
                   </div>

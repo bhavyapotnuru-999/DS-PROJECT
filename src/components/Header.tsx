@@ -10,7 +10,6 @@ import {
   FolderOpen,
   Briefcase,
   Wrench,
-  User,
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -31,7 +30,7 @@ export const Header: React.FC<HeaderProps> = ({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Exact navigation order requested:
-  // 1. Modules, 2. Lab, 3. Resources, 4. Projects (while keeping Home, Tools, Profile)
+  // 1. Modules, 2. Lab, 3. Resources, 4. Projects (while keeping Home and Tools)
   const navItems: { id: ActiveTab; label: string; icon: React.ReactNode; badge?: string }[] = [
     { id: 'home', label: 'Home', icon: <Home className="w-4 h-4" /> },
     { id: 'modules', label: 'Modules', icon: <BookOpen className="w-4 h-4" /> },
@@ -39,7 +38,6 @@ export const Header: React.FC<HeaderProps> = ({
     { id: 'resources', label: 'Resources', icon: <FolderOpen className="w-4 h-4" /> },
     { id: 'projects', label: 'Projects', icon: <Briefcase className="w-4 h-4" /> },
     { id: 'tools', label: 'Tools', icon: <Wrench className="w-4 h-4" /> },
-    { id: 'profile', label: 'Profile', icon: <User className="w-4 h-4" /> },
   ];
 
   const handleTabClick = (tab: ActiveTab) => {
@@ -90,17 +88,6 @@ export const Header: React.FC<HeaderProps> = ({
                     {item.icon}
                   </span>
                   <span>{item.label}</span>
-                  {item.id === 'executions' && (
-                    <span
-                      className={`ml-1 text-[11px] px-1.5 py-0.2 rounded-full ${
-                        isActive
-                          ? 'bg-blue-200 text-blue-950 font-semibold'
-                          : 'bg-slate-100 text-slate-600'
-                      }`}
-                    >
-                      {completedCount}/{totalCount}
-                    </span>
-                  )}
                 </button>
               );
             })}
@@ -176,11 +163,6 @@ export const Header: React.FC<HeaderProps> = ({
                   </span>
                   <span>{item.label}</span>
                 </div>
-                {item.id === 'executions' && (
-                  <span className="text-xs bg-slate-100 px-2 py-0.5 rounded-full text-slate-600">
-                    {completedCount}/{totalCount}
-                  </span>
-                )}
               </button>
             );
           })}

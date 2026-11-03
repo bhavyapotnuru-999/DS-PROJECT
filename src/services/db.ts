@@ -183,8 +183,7 @@ export function createSamplePlotDataUri(title: string, expNum: number): string {
   return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
 }
 
-class PortalDatabase {
-  private dbPromise: Promise<IDBDatabase> | null = null;
+class PortalDatabase {  private dbPromise: Promise<IDBDatabase> | null = null;
 
   private async openDB(): Promise<IDBDatabase> {
     if (this.dbPromise) return this.dbPromise;
@@ -281,6 +280,42 @@ class PortalDatabase {
         countReq.onerror = () => reject(countReq.error);
       });
 
+      // Keep the experiment titles and instructions in sync with the lab manual
+      // PDFs, including databases seeded before the titles were corrected.
+      const allExpReq = expStore.getAll();
+      await new Promise<void>((resolve, reject) => {
+        allExpReq.onsuccess = () => {
+          const stored = (allExpReq.result || []) as Experiment[];
+          stored.forEach((experiment) => {
+            const canonical = INITIAL_EXPERIMENTS.find(
+              (item) => item.experiment_number === experiment.experiment_number
+            );
+            if (!canonical) return;
+
+            const needsUpdate =
+              experiment.title !== canonical.title ||
+              experiment.description !== canonical.description ||
+              experiment.aim !== canonical.aim ||
+              experiment.linked_module_id !== canonical.linked_module_id;
+
+            if (needsUpdate) {
+              expStore.put({
+                ...experiment,
+                title: canonical.title,
+                description: canonical.description,
+                aim: canonical.aim,
+                linked_module_id: canonical.linked_module_id,
+                practical_steps: canonical.practical_steps,
+                expected_output_summary: canonical.expected_output_summary,
+                test_cases: canonical.test_cases,
+              });
+            }
+          });
+          resolve();
+        };
+        allExpReq.onerror = () => reject(allExpReq.error);
+      });
+
       // Check tools
       const toolCountReq = toolStore.count();
       await new Promise<void>((resolve, reject) => {
@@ -372,13 +407,12 @@ class PortalDatabase {
               id: 'out-3',
               experiment_id: 'exp-3',
               user_id: DEFAULT_USER_ID,
-              file_name: 'Exp3_EDA_Distribution_Plots.png',
-              file_type: 'image/png',
-              file_size: 320500,
-              file_url: createSamplePlotDataUri(INITIAL_EXPERIMENTS[2].title, 3),
-              file_data: createSamplePlotDataUri(INITIAL_EXPERIMENTS[2].title, 3),
+              file_name: 'exp3.pdf',
+              file_type: 'application/pdf',
+              file_size: 70126,
+              file_url: '/pdfs/exp3.pdf',
               uploaded_at: new Date(Date.now() - 86400000 * 6).toISOString(),
-              notes: 'Visualized feature pair correlations and histogram densities.',
+              notes: 'Data cleaning and preparation lab manual (exp3.pdf).',
             });
 
             outStore.put({
@@ -424,6 +458,35 @@ class PortalDatabase {
         };
         outCountReq.onerror = () => reject(outCountReq.error);
       });
+
+      // Experiment 3 used to be seeded with a sample plot image. Replace it
+      // with the bundled lab manual PDF, including in existing databases.
+      const exp3OutputReq = outStore.getAll();
+      await new Promise<void>((resolve, reject) => {
+        exp3OutputReq.onsuccess = () => {
+          const stored = (exp3OutputReq.result || []) as ExecutionOutput[];
+          stored
+            .filter(
+              (output) =>
+                output.experiment_id === 'exp-3' &&
+                output.file_type.startsWith('image/')
+            )
+            .forEach((output) => {
+              outStore.put({
+                ...output,
+                file_name: 'exp3.pdf',
+                file_type: 'application/pdf',
+                file_size: 70126,
+                file_url: '/pdfs/exp3.pdf',
+                file_data: undefined,
+                notes: 'Data cleaning and preparation lab manual (exp3.pdf).',
+              });
+            });
+          resolve();
+        };
+        exp3OutputReq.onerror = () => reject(exp3OutputReq.error);
+      });
+
     } catch (err) {
       console.warn('Database initialization note:', err);
     }

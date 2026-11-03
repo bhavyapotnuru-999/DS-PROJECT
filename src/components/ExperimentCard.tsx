@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { Experiment, ExecutionOutput, ExperimentStatus } from '../types';
+import { ExperimentEditorModal } from './ExperimentEditorModal';
 import {
   FileText,
-  Upload,
   Eye,
-  RefreshCw,
   CheckCircle,
   Clock,
   AlertCircle,
@@ -22,9 +21,7 @@ import {
 interface ExperimentCardProps {
   experiment: Experiment;
   output: ExecutionOutput | null;
-  onUploadClick: (experiment: Experiment) => void;
   onViewClick: (experiment: Experiment, output: ExecutionOutput) => void;
-  onReplaceClick: (experiment: Experiment, output: ExecutionOutput) => void;
   onStatusChange: (experimentId: string, status: ExperimentStatus) => void;
   onNavigateToModule?: (moduleId: string) => void;
 }
@@ -32,13 +29,12 @@ interface ExperimentCardProps {
 export const ExperimentCard: React.FC<ExperimentCardProps> = ({
   experiment,
   output,
-  onUploadClick,
   onViewClick,
-  onReplaceClick,
   onStatusChange,
   onNavigateToModule,
 }) => {
   const [showGuidelines, setShowGuidelines] = useState(false);
+  const [showEditor, setShowEditor] = useState(false);
 
   const isCompleted = experiment.status === 'Completed';
   const isInProgress = experiment.status === 'In Progress';
@@ -59,6 +55,10 @@ export const ExperimentCard: React.FC<ExperimentCardProps> = ({
     output &&
     (output.file_type.startsWith('image/') ||
       /\.(png|jpe?g|webp|svg)$/i.test(output.file_name));
+
+  const isLabManual = Boolean(
+    output && (output.id.startsWith('lab-manual-') || /^exp\d+\.pdf$/i.test(output.file_name))
+  );
 
   return (
     <div className="bg-white rounded-xl border border-slate-200/90 shadow-xs hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col">
@@ -121,17 +121,29 @@ export const ExperimentCard: React.FC<ExperimentCardProps> = ({
 
         {/* Linked Module Quick Jump & Guidelines Toggle */}
         <div className="mt-3 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
-          {experiment.linked_module_id && onNavigateToModule ? (
-            <button
-              onClick={() => onNavigateToModule(experiment.linked_module_id!)}
-              className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 hover:text-blue-900 transition-colors"
+          <div className="flex flex-wrap items-center gap-3">
+            {experiment.linked_module_id && onNavigateToModule ? (
+              <button
+                onClick={() => onNavigateToModule(experiment.linked_module_id!)}
+                className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 hover:text-blue-900 transition-colors"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-blue-600" />
+                <span>Read Module {experiment.experiment_number} Textbook Notes</span>
+              </button>
+            ) : null}
+
+            <a
+              href={`/pdfs/exp${experiment.experiment_number}.pdf`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-rose-700 hover:text-rose-900 transition-colors"
+              title={`Open exp${experiment.experiment_number}.pdf`}
             >
-              <BookOpen className="w-3.5 h-3.5 text-blue-600" />
-              <span>Read Module {experiment.experiment_number} Textbook Notes</span>
-            </button>
-          ) : (
-            <div />
-          )}
+              <FileText className="w-3.5 h-3.5" />
+              <span>Lab Manual PDF</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
 
           <button
             onClick={() => setShowGuidelines(!showGuidelines)}
@@ -198,7 +210,7 @@ export const ExperimentCard: React.FC<ExperimentCardProps> = ({
                 )}
                 <div className="min-w-0">
                   <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                    Execution Output
+                    {isLabManual ? 'Lab Manual PDF' : 'Execution Output'}
                   </div>
                   <div className="font-mono text-xs font-semibold text-slate-800 truncate" title={output.file_name}>
                     {output.file_name}
@@ -215,14 +227,6 @@ export const ExperimentCard: React.FC<ExperimentCardProps> = ({
                 >
                   <Eye className="w-3.5 h-3.5" />
                   <span>View</span>
-                </button>
-                <button
-                  onClick={() => onReplaceClick(experiment, output)}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md text-xs font-medium transition-colors"
-                  title="Replace with new output"
-                >
-                  <RefreshCw className="w-3.5 h-3.5" />
-                  <span>Replace</span>
                 </button>
               </div>
             </div>
@@ -285,7 +289,7 @@ export const ExperimentCard: React.FC<ExperimentCardProps> = ({
             <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1 border-t border-slate-200/60">
               <span className="flex items-center gap-1">
                 <Calendar className="w-3 h-3 text-slate-400" />
-                Uploaded: {new Date(output.uploaded_at).toLocaleDateString()} {new Date(output.uploaded_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                Saved: {new Date(output.uploaded_at).toLocaleDateString()} {new Date(output.uploaded_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </span>
               <span className="flex items-center gap-1 font-mono">
                 <HardDrive className="w-3 h-3 text-slate-400" />
@@ -294,47 +298,47 @@ export const ExperimentCard: React.FC<ExperimentCardProps> = ({
             </div>
           </div>
         ) : (
-          /* Empty State - Prompting PDF Upload */
+          /* Empty State */
           <div className="border border-dashed border-slate-200 rounded-xl p-5 text-center bg-slate-50/50 flex flex-col items-center justify-center space-y-2.5">
             <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
               <FileText className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs font-semibold text-slate-700">No Execution Output Uploaded</p>
+              <p className="text-xs font-semibold text-slate-700">No Output Saved Yet</p>
               <p className="text-[11px] text-slate-600 mt-0.5">
-                Upload lab execution PDF, graphs, or output logs to complete this experiment.
+                Open the notebook and run the cells to execute this experiment in the browser.
               </p>
             </div>
             <button
-              onClick={() => onUploadClick(experiment)}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors"
+              onClick={() => setShowEditor(true)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors"
             >
-              <Upload className="w-3.5 h-3.5" />
-              <span>Upload PDF / Output</span>
+              <Terminal className="w-3.5 h-3.5" />
+              <span>Run Experiment</span>
             </button>
           </div>
         )}
 
         {/* Footer Buttons Bar */}
         {output && (
-          <div className="flex items-center justify-between gap-2 pt-2">
+          <div className="pt-2">
             <button
-              onClick={() => onViewClick(experiment, output)}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium transition-colors shadow-xs"
+              onClick={() => setShowEditor(true)}
+              className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-medium transition-colors shadow-xs"
             >
-              <Eye className="w-3.5 h-3.5" />
-              <span>View Output</span>
-            </button>
-            <button
-              onClick={() => onReplaceClick(experiment, output)}
-              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-medium transition-colors"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              <span>Replace PDF</span>
+              <Terminal className="w-3.5 h-3.5" />
+              <span>Run Experiment</span>
             </button>
           </div>
         )}
       </div>
+
+      {showEditor && (
+        <ExperimentEditorModal
+          experiment={experiment}
+          onClose={() => setShowEditor(false)}
+        />
+      )}
     </div>
   );
 };

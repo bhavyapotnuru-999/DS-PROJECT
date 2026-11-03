@@ -1,15 +1,13 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { UserProfile } from '../types';
 import { dbService } from '../services/db';
 import {
   X,
-  Camera,
   Plus,
   Trash2,
   Check,
   AlertCircle,
   User,
-  UploadCloud,
   Sparkles,
 } from 'lucide-react';
 
@@ -32,33 +30,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
   if (!isOpen) return null;
-
-  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setError(null);
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      setError('Please select a valid image file (PNG, JPG, JPEG, WEBP).');
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      setError('Profile photo exceeds 5MB limit.');
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
-      setPhotoPreview(dataUrl);
-      setFormData((prev) => ({ ...prev, profile_photo: dataUrl }));
-    };
-    reader.readAsDataURL(file);
-  };
 
   const handleAddSkill = (e: React.FormEvent) => {
     e.preventDefault();
@@ -156,21 +128,6 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                   </div>
                 )}
               </div>
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="absolute inset-0 bg-black/50 rounded-xl flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                title="Change photo"
-              >
-                <Camera className="w-6 h-6" />
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handlePhotoSelect}
-                className="hidden"
-              />
             </div>
 
             <div className="text-center sm:text-left flex-1 min-w-0">
@@ -178,30 +135,8 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 Profile photo
               </label>
               <p className="text-xs text-slate-500 mt-0.5">
-                Upload your portrait photo (PNG, JPG, or WEBP under 5MB).
+                Official profile photo on record.
               </p>
-              <div className="mt-3 flex flex-wrap gap-2 justify-center sm:justify-start">
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-2xs transition-colors"
-                >
-                  <UploadCloud className="w-3.5 h-3.5" />
-                  <span>Upload Photo</span>
-                </button>
-                {photoPreview && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setPhotoPreview('');
-                      setFormData((prev) => ({ ...prev, profile_photo: '' }));
-                    }}
-                    className="px-3 py-1.5 text-xs text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg font-medium transition-colors"
-                  >
-                    Remove Photo
-                  </button>
-                )}
-              </div>
             </div>
           </div>
 
